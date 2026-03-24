@@ -1,25 +1,28 @@
-import time
+import asyncio
 from bson import ObjectId
 from app.db.mongo import video_collection
 
 async def process_video(event: dict):
-    print("🎬 Processing video:", event)
+    print("🎬 Processing:", event)
 
     video_id = event["video_id"]
+    file_path = event["file_path"]
 
-    # 1. Mark as processing
+    print(f"📂 File path received: {file_path}")
+
+    # Update status → processing
     await video_collection.update_one(
         {"_id": ObjectId(video_id)},
         {"$set": {"status": "processing"}}
     )
 
-    # 2. Simulate processing
-    time.sleep(5)  # ⚠️ blocking (we'll fix later)
+    # Simulate processing
+    await asyncio.sleep(5)
 
-    # 3. Mark as completed
+    # Update status → completed
     await video_collection.update_one(
         {"_id": ObjectId(video_id)},
         {"$set": {"status": "completed"}}
     )
 
-    print("✅ Processing completed:", video_id)
+    print("✅ Done processing:", file_path)

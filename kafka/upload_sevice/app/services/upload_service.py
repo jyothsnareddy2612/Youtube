@@ -6,7 +6,7 @@ from app.core.config import settings
 producer = KafkaProducerService()
 
 async def handle_video_upload(data: dict):
-    # 1. Save to MongoDB
+
     video_doc = {
         "title": data["title"],
         "description": data["description"],
@@ -18,10 +18,9 @@ async def handle_video_upload(data: dict):
 
     result = await video_collection.insert_one(video_doc)
 
-    # 2. Send Kafka Event
     event = {
         "video_id": str(result.inserted_id),
-        "file_path": data["file_path"],
+        "file_path": data["file_path"],   # 👈 real path now
         "status": "uploaded"
     }
 
