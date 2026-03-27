@@ -1,10 +1,13 @@
-from sqlalchemy import Column, Integer, String
+import uuid
+from sqlalchemy import Column, String
 from app.db.database import Base
 
-
 class Video(Base):
-    __tablename__ = "videos"
+    __tablename__ = "videosnew"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)  # ✅ FIX
-    title = Column(String, nullable=False)
-    file_path = Column(String, nullable=False)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))  # 🔥 FIX
+    title = Column(String)
+    file_path = Column(String)
+    status = Column(String)
+    master_playlist = Column(String)
+    error = Column(String)

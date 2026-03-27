@@ -1,10 +1,14 @@
 import os
 from fastapi import APIRouter, UploadFile, Form, Request, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+
 from app.db.database import get_db
 from app.services.upload_service import merge_chunks, save_video_metadata
+from app.kafka.producer import KafkaProducerService
 
 router = APIRouter()
+
+producer = KafkaProducerService()
 
 CHUNK_DIR = "videos/chunks"
 os.makedirs(CHUNK_DIR, exist_ok=True)
@@ -31,20 +35,34 @@ async def merge_chunks_api(
     request: Request,
     filename: str = Form(...),
     totalChunks: int = Form(...),
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
-    print("🔥 merge API hit")
+    print("🔥 MERGE API HIT")
 
     user = request.session.get("user")
-    print("USER:", user)
 
     if not user:
         return {"error": "Login required"}
 
+    # merge file
     final_path = await merge_chunks(filename, totalChunks)
-    print("FINAL PATH:", final_path)
+    print("📁 Final file:", final_path)
 
-    video_id = await save_video_metadata(db, filename, final_path)
-    print("VIDEO SAVED:", video_id)
+    # save DB
+    video_id = save_video_metadata(db, filename, final_path)
+    print("💾 Saved in DB:", video_id)
+
+    # 🔥 SEND TO KAFKA (THIS WAS MISSING)
+    file_path = os.path.abspath(final_path) 
+
+    producer.send(
+        topic="youtube_kafka",
+        message={
+            "video_id": video_id,
+            "file_path": file_path
+        }
+    )
+
+    print("📤 Sent to Kafka:", video_id)
 
     return {"video_id": video_id}

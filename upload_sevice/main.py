@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -12,13 +11,12 @@ from app.db.database import Base, engine
 
 app = FastAPI()
 
-# ✅ AUTO CREATE TABLES (IMPORTANT FIX)
+# ✅ FIXED: SYNC STARTUP (NO async)
 @app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all) 
-        
-        await conn.run_sync(Base.metadata.create_all)
+def startup():
+    print("🚀 Creating DB tables...")
+    Base.metadata.create_all(bind=engine)
+
 
 # Session
 app.add_middleware(

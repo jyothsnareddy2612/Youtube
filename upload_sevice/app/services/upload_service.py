@@ -1,5 +1,5 @@
 import os
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session   # ✅ FIXED
 from app.models.video import Video
 
 CHUNK_DIR = "videos/chunks"
@@ -9,6 +9,7 @@ os.makedirs(CHUNK_DIR, exist_ok=True)
 os.makedirs(RAW_DIR, exist_ok=True)
 
 
+# ✅ keep async (file IO is fine)
 async def merge_chunks(filename: str, total_chunks: int):
     final_path = os.path.join(RAW_DIR, filename)
 
@@ -21,9 +22,12 @@ async def merge_chunks(filename: str, total_chunks: int):
     return final_path
 
 
-async def save_video_metadata(db: AsyncSession, title: str, file_path: str):
+# 🔥 IMPORTANT: make this SYNC
+def save_video_metadata(db: Session, title: str, file_path: str):
     video = Video(title=title, file_path=file_path)
+
     db.add(video)
-    await db.commit()
-    await db.refresh(video)
+    db.commit()        # ✅ NO await
+    db.refresh(video)  # ✅ NO await
+
     return video.id
