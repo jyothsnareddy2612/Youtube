@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+ca.pem
+node_modules/
+output/
+*.ts
+*.m3u8
