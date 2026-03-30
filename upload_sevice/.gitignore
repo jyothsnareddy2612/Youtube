@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+ca.pem
+node_modules/
+videos/
+*.mp4
+output/
